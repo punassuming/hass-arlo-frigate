@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "account_id": "SRP account ID",
+          "username": "SRP username",
+          "password": "SRP password",
+          "time_of_use": "Time-of-Use price plan"
+        },
+        "description": "Imports SRP's completed hourly intervals as Home Assistant statistics. SRP usually publishes the previous day with a delay."
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to SRP. Check the account ID, username, password, and Time-of-Use selection."
+    },
+    "abort": {
+      "already_configured": "This SRP account is already configured."
+    }
+  }
+}
