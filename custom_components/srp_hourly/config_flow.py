@@ -13,7 +13,13 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_ACCOUNT_ID, CONF_TIME_OF_USE, DEFAULT_TIME_OF_USE, DOMAIN
+from .const import (
+    CONF_ACCOUNT_ID,
+    CONF_TIME_OF_USE,
+    DEFAULT_TIME_OF_USE,
+    DOMAIN,
+    normalize_account_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +30,9 @@ async def _validate_input(hass, data: dict[str, Any]) -> None:
 
     def _fetch() -> None:
         client = SrpEnergyClient(
-            data[CONF_ACCOUNT_ID], data[CONF_USERNAME], data[CONF_PASSWORD]
+            normalize_account_id(data[CONF_ACCOUNT_ID]),
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
         )
         yesterday = dt_util.now() - timedelta(days=1)
         client.usage(
@@ -48,6 +56,10 @@ class SrpHourlyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input = {
+                **user_input,
+                CONF_ACCOUNT_ID: normalize_account_id(user_input[CONF_ACCOUNT_ID]),
+            }
             await self.async_set_unique_id(user_input[CONF_ACCOUNT_ID])
             self._abort_if_unique_id_configured()
             try:

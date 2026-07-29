@@ -12,7 +12,8 @@ into daily totals.
 2. Restart Home Assistant.
 3. Go to **Settings → Devices & services → Add integration → SRP Hourly Usage**.
 4. Enter the same SRP My Account credentials and account ID used by the built-in
-   integration. Enable **Time-of-Use price plan** if applicable.
+   integration. Account-ID dashes are accepted and removed automatically. Enable
+   **Time-of-Use price plan** if applicable.
 
 The first sync imports up to 35 complete days. Later syncs run every four hours
 and only import newly completed hourly intervals. The integration intentionally
@@ -24,8 +25,8 @@ Find the two statistic IDs in the attributes of either **Latest hourly usage**
 or **Latest hourly cost**. They have this form:
 
 ```text
-srp_hourly:<config-entry-id>_energy
-srp_hourly:<config-entry-id>_cost
+srp_hourly:<config-entry-id-without-dashes>_energy
+srp_hourly:<config-entry-id-without-dashes>_cost
 ```
 
 Use them directly in a manual card. These are external statistic IDs, not
@@ -35,7 +36,7 @@ sensor entity IDs.
 type: statistics-graph
 title: SRP hourly electricity use
 entities:
-  - srp_hourly:REPLACE_WITH_CONFIG_ENTRY_ID_energy
+  - srp_hourly:REPLACE_WITH_CONFIG_ENTRY_ID_WITHOUT_DASHES_energy
 chart_type: bar
 stat_types:
   - change

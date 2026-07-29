@@ -7,5 +7,5 @@
   "issue_tracker": "https://github.com/punassuming/hass-arlo-frigate/issues",
   "iot_class": "cloud_polling",
   "requirements": ["srpenergy==1.3.8"],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

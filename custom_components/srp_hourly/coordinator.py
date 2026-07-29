@@ -24,6 +24,7 @@ from .const import (
     STATISTIC_COST_SUFFIX,
     STATISTIC_ENERGY_SUFFIX,
     UPDATE_INTERVAL,
+    normalize_account_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,8 +58,11 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
         )
         self._local_tz = ZoneInfo(hass.config.time_zone)
-        self.energy_statistic_id = f"{DOMAIN}:{entry.entry_id}_{STATISTIC_ENERGY_SUFFIX}"
-        self.cost_statistic_id = f"{DOMAIN}:{entry.entry_id}_{STATISTIC_COST_SUFFIX}"
+        # Config entry IDs are UUIDs and may contain hyphens, which Home
+        # Assistant does not allow in external statistic IDs.
+        statistic_key = entry.entry_id.replace("-", "")
+        self.energy_statistic_id = f"{DOMAIN}:{statistic_key}_{STATISTIC_ENERGY_SUFFIX}"
+        self.cost_statistic_id = f"{DOMAIN}:{statistic_key}_{STATISTIC_COST_SUFFIX}"
 
     async def _async_update_data(self) -> ImportedInterval | None:
         """Fetch completed intervals and add only the new ones."""
@@ -152,7 +156,7 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
         from srpenergy.client import SrpEnergyClient
 
         client = SrpEnergyClient(
-            self.entry.data[CONF_ACCOUNT_ID],
+            normalize_account_id(self.entry.data[CONF_ACCOUNT_ID]),
             self.entry.data[CONF_USERNAME],
             self.entry.data[CONF_PASSWORD],
         )

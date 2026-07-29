@@ -12,3 +12,8 @@ UPDATE_INTERVAL = timedelta(hours=4)
 
 STATISTIC_ENERGY_SUFFIX = "energy"
 STATISTIC_COST_SUFFIX = "cost"
+
+
+def normalize_account_id(account_id: str) -> str:
+    """Return an SRP account ID without display separators."""
+    return account_id.replace("-", "")
