@@ -9,6 +9,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.recorder.statistics import async_add_external_statistics
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant
@@ -104,12 +105,11 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
         for interval in intervals:
             energy_sum += interval.energy_kwh
             cost_sum += interval.cost
-            timestamp = interval.start.timestamp()
             energy_statistics.append(
-                {"start": timestamp, "state": energy_sum, "sum": energy_sum}
+                {"start": interval.start, "state": energy_sum, "sum": energy_sum}
             )
             cost_statistics.append(
-                {"start": timestamp, "state": cost_sum, "sum": cost_sum}
+                {"start": interval.start, "state": cost_sum, "sum": cost_sum}
             )
 
         async_add_external_statistics(
@@ -117,9 +117,11 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             {
                 "has_mean": False,
                 "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
                 "name": f"{self.entry.title} electric consumption",
                 "source": DOMAIN,
                 "statistic_id": self.energy_statistic_id,
+                "unit_class": "energy",
                 "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
             },
             energy_statistics,
@@ -129,9 +131,11 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             {
                 "has_mean": False,
                 "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
                 "name": f"{self.entry.title} electric cost",
                 "source": DOMAIN,
                 "statistic_id": self.cost_statistic_id,
+                "unit_class": None,
                 "unit_of_measurement": self.hass.config.currency,
             },
             cost_statistics,
