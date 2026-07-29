@@ -15,10 +15,9 @@ into daily totals.
    integration. Account-ID dashes are accepted and removed automatically. Enable
    **Time-of-Use price plan** if applicable.
 
-The first sync imports up to three years of complete hourly history available
-from SRP. Later syncs run every four hours and only import newly completed
-intervals. The integration intentionally excludes the current day because SRP
-can revise recent readings.
+The first sync imports up to 35 days of history plus every completed hour from
+the current day. Later syncs run every four hours and only import newly
+completed hourly intervals; the in-progress hour is excluded.
 
 ## Hourly dashboard cards
 
