@@ -8,11 +8,12 @@ import logging
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.models import StatisticMeanType
+from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -167,6 +168,25 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             cost=latest.cost,
             imported_count=len(intervals),
         )
+
+    async def async_start_backfill(self, days: int) -> None:
+        """Request an explicit historical import before any data exists."""
+        state = await self._store.async_load() or {}
+        if self._parse_stored_start(state.get("latest_start")) is not None:
+            raise HomeAssistantError(
+                "Backfill is only available before SRP hourly data is imported"
+            )
+
+        end_day = dt_util.now().astimezone(self._local_tz).date()
+        requested_start = end_day - timedelta(days=days - 1)
+        stored_start = self._parse_stored_day(state.get("backfill_start"))
+        backfill_start = (
+            min(stored_start, requested_start) if stored_start else requested_start
+        )
+        await self._store.async_save(
+            {**state, "backfill_start": backfill_start.isoformat()}
+        )
+        await self.async_refresh()
 
     def _fetch_usage(self, start_day, end_day):
         """Fetch data from the synchronous srpenergy client."""

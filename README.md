@@ -21,6 +21,21 @@ remembers that date and retries the missing gap on a later poll. Subsequent
 syncs run every four hours and request only from the last imported calendar day
 through today; the in-progress hour is excluded.
 
+## Optional historical backfill
+
+Before the integration has successfully imported any hourly readings, you can
+request an intentional historical import from **Developer Tools → Actions**:
+
+```yaml
+action: srp_hourly.backfill
+data:
+  days: 30
+```
+
+`days` defaults to `1` and accepts up to `365`. The service makes one SRP API
+request for the selected date range, and is rejected after data has been
+imported so it cannot accidentally duplicate or recalculate existing statistics.
+
 ## Hourly dashboard cards
 
 Find the two statistic IDs in the attributes of either **Latest hourly usage**

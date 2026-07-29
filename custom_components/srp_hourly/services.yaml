@@ -1,0 +1,22 @@
+backfill:
+  name: Backfill historical usage
+  description: >-
+    Fetch a selected historical period when this entry has not yet imported any
+    SRP hourly data. This makes one SRP API request for the selected date range.
+  fields:
+    days:
+      name: Days
+      description: Number of calendar days to fetch, including today.
+      default: 1
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 365
+          mode: box
+    entry_id:
+      name: Config entry ID
+      description: Required only when more than one SRP Hourly entry is configured.
+      required: false
+      selector:
+        text:
