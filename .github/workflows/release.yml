@@ -1,0 +1,49 @@
+name: Release integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - custom_components/srp_hourly/manifest.json
+      - .github/workflows/release.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-integration
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Read manifest version
+        id: manifest
+        run: |
+          version="$(python -c 'import json; print(json.load(open("custom_components/srp_hourly/manifest.json"))["version"])')"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Check for an existing release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.manifest.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.release.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.manifest.outputs.version }}" \
+            --title "v${{ steps.manifest.outputs.version }}" \
+            --generate-notes
