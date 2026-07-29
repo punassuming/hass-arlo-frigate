@@ -21,8 +21,8 @@ from homeassistant.util import slugify
 from .const import (
     CONF_ACCOUNT_ID,
     CONF_TIME_OF_USE,
-    DEFAULT_LOOKBACK_DAYS,
     DOMAIN,
+    INITIAL_HISTORY_LOOKBACK_DAYS,
     STATISTIC_COST_SUFFIX,
     STATISTIC_ENERGY_SUFFIX,
     UPDATE_INTERVAL,
@@ -71,15 +71,18 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
         """Fetch completed intervals and add only the new ones."""
         state = await self._store.async_load() or {}
         latest_start = self._parse_stored_start(state.get("latest_start"))
-        energy_sum = float(state.get("energy_sum", 0))
-        cost_sum = float(state.get("cost_sum", 0))
+        history_imported = bool(state.get("history_imported", False))
+        energy_sum = float(state.get("energy_sum", 0)) if history_imported else 0
+        cost_sum = float(state.get("cost_sum", 0)) if history_imported else 0
 
         # SRP commonly revises the most recent day for several hours. Import
         # only complete days so a value is not permanently recorded too early.
         today = dt_util.now().astimezone(self._local_tz).date()
         latest_complete_day = today - timedelta(days=1)
-        if latest_start is None:
-            query_start = latest_complete_day - timedelta(days=DEFAULT_LOOKBACK_DAYS - 1)
+        if not history_imported:
+            query_start = latest_complete_day - timedelta(
+                days=INITIAL_HISTORY_LOOKBACK_DAYS - 1
+            )
         else:
             query_start = latest_start.astimezone(self._local_tz).date()
 
@@ -94,10 +97,12 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             raise UpdateFailed(f"Error fetching SRP hourly usage: {err}") from err
 
         intervals = self._parse_intervals(usage, latest_complete_day)
-        if latest_start is not None:
+        if latest_start is not None and history_imported:
             intervals = [interval for interval in intervals if interval.start > latest_start]
 
         if not intervals:
+            if not history_imported:
+                await self._store.async_save({**state, "history_imported": True})
             return self.data
 
         energy_statistics = []
@@ -146,6 +151,7 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             {
                 "cost_sum": cost_sum,
                 "energy_sum": energy_sum,
+                "history_imported": True,
                 "latest_start": latest.start.isoformat(),
             }
         )
