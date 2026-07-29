@@ -15,9 +15,11 @@ into daily totals.
    integration. Account-ID dashes are accepted and removed automatically. Enable
    **Time-of-Use price plan** if applicable.
 
-The first sync imports up to 35 days of history plus every completed hour from
-the current day. Later syncs run every four hours and only import newly
-completed hourly intervals; the in-progress hour is excluded.
+When there is no prior imported data, the integration requests only the current
+day and imports every completed hour. If SRP has not published readings yet, it
+remembers that date and retries the missing gap on a later poll. Subsequent
+syncs run every four hours and request only from the last imported calendar day
+through today; the in-progress hour is excluded.
 
 ## Hourly dashboard cards
 

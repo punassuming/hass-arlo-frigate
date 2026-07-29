@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 import logging
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -21,7 +21,6 @@ from homeassistant.util import slugify
 from .const import (
     CONF_ACCOUNT_ID,
     CONF_TIME_OF_USE,
-    DEFAULT_LOOKBACK_DAYS,
     DOMAIN,
     STATISTIC_COST_SUFFIX,
     STATISTIC_ENERGY_SUFFIX,
@@ -71,6 +70,7 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
         """Fetch completed intervals and add only the new ones."""
         state = await self._store.async_load() or {}
         latest_start = self._parse_stored_start(state.get("latest_start"))
+        backfill_start = self._parse_stored_day(state.get("backfill_start"))
         energy_sum = float(state.get("energy_sum", 0))
         cost_sum = float(state.get("cost_sum", 0))
 
@@ -80,7 +80,13 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
         current_hour_start = now.replace(minute=0, second=0, microsecond=0)
         query_end_day = now.date()
         if latest_start is None:
-            query_start = query_end_day - timedelta(days=DEFAULT_LOOKBACK_DAYS - 1)
+            # The hourly endpoint accepts date ranges, not individual hours.
+            # Start with today's smallest possible range and retain this date
+            # if SRP has not yet published any readings to retry only the gap.
+            query_start = backfill_start or query_end_day
+            if backfill_start is None:
+                state = {**state, "backfill_start": query_start.isoformat()}
+                await self._store.async_save(state)
         else:
             query_start = latest_start.astimezone(self._local_tz).date()
 
@@ -99,6 +105,10 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             intervals = [interval for interval in intervals if interval.start > latest_start]
 
         if not intervals:
+            if latest_start is None:
+                await self._store.async_save(
+                    {**state, "backfill_start": query_start.isoformat()}
+                )
             return self.data
 
         energy_statistics = []
@@ -197,3 +207,8 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
     def _parse_stored_start(value: str | None) -> datetime | None:
         """Read an ISO timestamp from persistent storage."""
         return datetime.fromisoformat(value) if value else None
+
+    @staticmethod
+    def _parse_stored_day(value: str | None) -> date | None:
+        """Read an ISO date from persistent storage."""
+        return date.fromisoformat(value) if value else None
