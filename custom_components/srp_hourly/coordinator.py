@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util import slugify
 
 from .const import (
     CONF_ACCOUNT_ID,
@@ -58,9 +59,10 @@ class SrpHourlyCoordinator(DataUpdateCoordinator[ImportedInterval | None]):
             hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
         )
         self._local_tz = ZoneInfo(hass.config.time_zone)
-        # Config entry IDs are UUIDs and may contain hyphens, which Home
-        # Assistant does not allow in external statistic IDs.
-        statistic_key = entry.entry_id.replace("-", "")
+        # Statistic IDs permit only lowercase letters, numbers, and single
+        # underscores. Slugify also handles config entry IDs from older and
+        # newer Home Assistant versions without relying on their format.
+        statistic_key = slugify(entry.entry_id)
         self.energy_statistic_id = f"{DOMAIN}:{statistic_key}_{STATISTIC_ENERGY_SUFFIX}"
         self.cost_statistic_id = f"{DOMAIN}:{statistic_key}_{STATISTIC_COST_SUFFIX}"
 

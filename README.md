@@ -25,8 +25,8 @@ Find the two statistic IDs in the attributes of either **Latest hourly usage**
 or **Latest hourly cost**. They have this form:
 
 ```text
-srp_hourly:<config-entry-id-without-dashes>_energy
-srp_hourly:<config-entry-id-without-dashes>_cost
+srp_hourly:<safe-config-entry-id>_energy
+srp_hourly:<safe-config-entry-id>_cost
 ```
 
 Use them directly in a manual card. These are external statistic IDs, not
@@ -36,7 +36,7 @@ sensor entity IDs.
 type: statistics-graph
 title: SRP hourly electricity use
 entities:
-  - srp_hourly:REPLACE_WITH_CONFIG_ENTRY_ID_WITHOUT_DASHES_energy
+  - srp_hourly:REPLACE_WITH_THE_DISPLAYED_ENERGY_STATISTIC_ID
 chart_type: bar
 stat_types:
   - change
