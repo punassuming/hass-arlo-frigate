@@ -23,8 +23,8 @@ through today; the in-progress hour is excluded.
 
 ## Optional historical backfill
 
-Before the integration has successfully imported any hourly readings, you can
-request an intentional historical import from **Developer Tools → Actions**:
+When the recorder has no hourly readings for the integration, you can request
+an intentional historical import from **Developer Tools → Actions**:
 
 ```yaml
 action: srp_hourly.backfill
