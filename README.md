@@ -1,11 +1,22 @@
 # SRP Hourly Usage for Home Assistant
 
+[![HACS][hacs-badge]][hacs]
+[![Add to HACS][hacs-add-badge]][hacs-add]
+[![Add integration][config-flow-badge]][config-flow]
+
 This custom integration imports SRP's completed hourly electricity intervals as
 Home Assistant external statistics. It is designed to complement, not replace,
 the built-in **SRP Energy** integration, which aggregates SRP's hourly API data
 into daily totals.
 
-## Install
+## Installation
+
+### HACS
+
+Use the **Add to HACS** button above, then select **Download** in HACS. Restart
+Home Assistant after the download completes.
+
+### Manual
 
 1. Copy `custom_components/srp_hourly` to your Home Assistant configuration
    directory.
@@ -64,3 +75,15 @@ days_to_show: 1
 For hourly cost, replace the statistic ID with the one ending in `_cost` and
 change the title. A new chart is populated only after SRP publishes completed
 interval data; it is not live power monitoring.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 or later.
+See [LICENSE](LICENSE).
+
+[hacs]: https://hacs.xyz
+[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square
+[hacs-add]: https://my.home-assistant.io/redirect/hacs_repository/?owner=punassuming&repository=hass-srp-hourly&category=integration
+[hacs-add-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
+[config-flow]: https://my.home-assistant.io/redirect/config_flow_start?domain=srp_hourly
+[config-flow-badge]: https://my.home-assistant.io/badges/config_flow_start.svg
